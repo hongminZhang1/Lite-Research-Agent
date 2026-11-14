@@ -47,6 +47,14 @@ def deepseek_key():
     return os.getenv("DEEPSEEK_API_KEY", "").strip()
 
 
+def tavily_key():
+    for config in (LOCAL_CONFIG, WORKSPACE_CONFIG):
+        value = dotenv_values(config, encoding="utf-8-sig", interpolate=False).get("TAVILY_API_KEY")
+        if value and value.strip():
+            return value.strip()
+    return os.getenv("TAVILY_API_KEY", "").strip()
+
+
 def model_defaults(key):
     if os.getenv("RESEARCH_CLOUD_ONLY") == "1":
         return {"fast": DEEPSEEK_DEFAULT if key else None, "strong": None}
@@ -74,6 +82,8 @@ def resolve_model_settings(body, *, default_tiers):
             if override is None or override == "":
                 override = key
             resolved[kind] = {**model, "base": DEEPSEEK_BASE, "key": override}
+    if not resolved.get("search_key"):
+        resolved["search_key"] = tavily_key()
     return resolved
 
 
@@ -173,7 +183,9 @@ class TurnRequest(BaseModel):
 @router.get("/api/lab/defaults")
 def defaults():
     key = deepseek_key()
-    return {**model_defaults(key), "deepseek_configured": bool(key)}
+    tkey = tavily_key()
+    return {**model_defaults(key), "deepseek_configured": bool(key),
+            "search_key": tkey, "tavily_configured": bool(tkey)}
 
 
 @router.post("/api/lab/check/{kind}")
@@ -186,7 +198,7 @@ async def check(kind: str, request: Request):
             raise ValueError("Invalid settings")
         if kind == "search":
             try:
-                settings = Settings.model_validate({"search_key": body.get("search_key", "")})
+                settings = Settings.model_validate({"search_key": body.get("search_key", "") or tavily_key()})
             except ValidationError as error:
                 return {"ok": False, "message": validation_message(error, ("settings",))}
             results = await asyncio.to_thread(search_sources, "VGGT4D", settings.search_key.get_secret_value(), 2)

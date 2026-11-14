@@ -187,7 +187,8 @@ function App() {
       return response.json();
     }).then(defaults=>{
       if(!configChanged.current) setConfig(current=>({...current,fast:{...blankEndpoint,...defaults.fast},
-        strong:{...blankEndpoint,...defaults.strong},deepseek_configured:!!defaults.deepseek_configured}));
+        strong:{...blankEndpoint,...defaults.strong},deepseek_configured:!!defaults.deepseek_configured,
+        search_key:defaults.search_key||current.search_key}));
     }).catch(()=>setError("无法读取默认模型设置，请重新加载页面或手动配置模型。"))
       .finally(()=>setLoadingConfig(false));
     return ()=>socket.current?.close();

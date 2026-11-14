@@ -293,7 +293,7 @@ def evidence_from_query(query, budget, gateway, sources, seen, round_no, *, chan
             excerpt = paper_excerpt(content, result.title) if basis == PAPER_ABSTRACT else content[:460]
             row = {"title": gateway.settings.redact(result.title or url), "url": gateway.settings.redact(url),
                    "content": gateway.settings.redact(excerpt), "basis": basis}
-            if len(content) > 460 and basis == "网页正文":
+            if content:  # 对所有来源（含论文摘要、短正文、搜索摘录）做相关性判断，过滤无关结果
                 before_summary = monotonic()
                 try:
                     identifier = len(sources) + 1
