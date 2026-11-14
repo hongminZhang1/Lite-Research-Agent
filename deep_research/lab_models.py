@@ -141,7 +141,7 @@ class Settings(BaseModel):
 
 
 class Limits(BaseModel):
-    rounds: int = Field(default=3, strict=True, ge=1)
+    rounds: int = Field(default=3, strict=True, ge=1, le=20)
     seconds: int | None = Field(default=None, strict=True, ge=5)
     tokens: int | None = Field(default=None, strict=True, ge=64)
     usd: float | None = Field(default=None, strict=True, ge=0)

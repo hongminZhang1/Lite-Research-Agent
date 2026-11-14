@@ -93,7 +93,7 @@ VALIDATION_MESSAGES = {
     "policy": "请选择有效的调用策略。",
     "session_id": "研究会话编号无效，请重新打开会话。",
     "limits": "研究预算必须包含有效的数字。",
-    "limits.rounds": "轮数必须是 1 或以上的整数。",
+    "limits.rounds": "轮数必须是 1 到 20 之间的整数。",
     "limits.seconds": "时间预算必须是 5 或以上的整数秒，也可以留空表示不限制。",
     "limits.tokens": "Token 预算必须是 64 或以上的整数，也可以留空表示不限制。",
     "limits.usd": "费用预算必须是 0 或以上的数字，也可以留空。",

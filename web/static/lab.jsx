@@ -5,10 +5,10 @@ const blankEndpoint = {base:"", model:"", key:"", input_price:"", output_price:"
 const deepseekBase = "https://api.deepseek.com";
 const blankLimits = {rounds:3, seconds:"", tokens:"", usd:""};
 const budgetFields = [
-  ["rounds","轮数",1],
-  ["seconds","秒",5],
-  ["tokens","Token",64],
-  ["usd","美元",0],
+  ["rounds","轮数",1,20],
+  ["seconds","秒",5,null],
+  ["tokens","Token",64,null],
+  ["usd","美元",0,null],
 ];
 const fee = value => value == null ? "未知" : `US$ ${Number(value).toFixed(6)}`;
 const tokens = value => Number(value ?? 0).toLocaleString("zh-CN");
@@ -30,16 +30,16 @@ function payload(config) {
 
 function budgetError(limits) {
   const messages = {
-    rounds:"轮数必须是 1 或以上的整数。",
+    rounds:"轮数必须是 1 到 20 之间的整数。",
     seconds:"时间预算必须是 5 或以上的整数秒，也可以留空表示不限制。",
     tokens:"Token 预算必须是 64 或以上的整数，也可以留空表示不限制。",
     usd:"费用预算必须是 0 或以上的数字，也可以留空。",
   };
-  for (const [field,,min] of budgetFields) {
+  for (const [field,,min,max] of budgetFields) {
     const empty = limits[field] === "";
     if (field !== "rounds" && empty) continue;
     const value = Number(limits[field]);
-    if (empty || !Number.isFinite(value) || value < min || (field !== "usd" && !Number.isInteger(value))) {
+    if (empty || !Number.isFinite(value) || value < min || (max != null && value > max) || (field !== "usd" && !Number.isInteger(value))) {
       return messages[field];
     }
   }
@@ -163,7 +163,7 @@ function App() {
   const [config,setConfig]=useState({fast:{...blankEndpoint},strong:{...blankEndpoint},search_key:"",search_credit_price:"",deepseek_configured:false});
   const [loadingConfig,setLoadingConfig]=useState(true);
   const [limits,setLimits]=useState(blankLimits);
-  const [scenario,setScenario]=useState("general"), [policy,setPolicy]=useState("adaptive");
+  const [scenario,setScenario]=useState("general"), [policy,setPolicy]=useState("strong");
   const [sessions,setSessions]=useState([]), [selected,setSelected]=useState(null);
   const [runs,setRuns]=useState([]), [legacy,setLegacy]=useState([]), [pending,setPending]=useState(null);
   const [input,setInput]=useState(""), [error,setError]=useState(""), [sidebar,setSidebar]=useState(false);
@@ -306,7 +306,7 @@ function App() {
     </div></div>
     <form className="composer" onSubmit={send} noValidate><div className="column composer-card"><div className="compose-main"><textarea aria-label="研究问题" placeholder={selected?"针对已有报告追问或补充角度…":"输入一个研究问题…"} required maxLength="2500" value={input} disabled={busy} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();e.currentTarget.form.requestSubmit();}}}/><button className="primary" disabled={loadingConfig||busy||!input.trim()}>{busy?"研究中…":"开始研究"}</button></div>
       <div className="options"><label>场景<select disabled={busy} value={scenario} onChange={e=>setScenario(e.target.value)}><option value="general">开放调研</option><option value="market">行情聚合实验</option></select></label><label>策略<select disabled={busy} value={policy} onChange={e=>setPolicy(e.target.value)}><option value="adaptive">按需升级</option><option value="strong">每步强模型</option><option value="compare">对照运行</option></select></label>
-        {budgetFields.map(([field,label,min])=><label key={field}>{label}<input type="number" min={min} step={field==="usd"?"any":1} required={field==="rounds"} placeholder={field==="rounds"?undefined:"可选，留空不限制"} disabled={busy} value={limits[field]} onChange={e=>setLimits({...limits,[field]:e.target.value})}/></label>)}</div>
+        {budgetFields.map(([field,label,min,max])=><label key={field}>{label}<input type="number" min={min} max={max??undefined} step={field==="usd"?"any":1} required={field==="rounds"} placeholder={field==="rounds"?undefined:"可选，留空不限制"} disabled={busy} value={limits[field]} onChange={e=>setLimits({...limits,[field]:e.target.value})}/></label>)}</div>
       {policy==="compare"&&<small>两个策略依次运行，各自使用同一套预算和验收标准。</small>}
     </div></form>
   </main><Settings dialog={dialog} config={config} change={value=>{configChanged.current=true;setConfig(value);}}/>
