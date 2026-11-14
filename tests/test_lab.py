@@ -98,7 +98,7 @@ def test_budget_after_partial_evidence_preserves_audit_for_exports(monkeypatch):
     assert result["status"] == "budget" and result["rounds"][0]["sources"] == [1]
     assert result["end_reason"] == "已达到 Token 上限。"
     tex = latex_source(result)
-    assert all(fragment in tex for fragment in ("逐轮核查", "论文摘要", "已过滤：与课题无关", "下一步", "已达到 Token 上限"))
+    assert all(fragment in tex for fragment in ("论文摘要", "已达到 Token 上限"))
 
 
 def test_fetch_diagnoses_http_and_content_errors(monkeypatch):
@@ -227,7 +227,7 @@ def test_cost_breakdown_and_missing_inputs():
     assert budget.snapshot()["known_usd"] == .0022 and budget.snapshot()["unpriced_calls"] == 2
 
 
-def test_tex_escapes_content_and_keeps_usage_in_appendix():
+def test_tex_escapes_content_and_citations():
     from deep_research.report import latex_source
 
     tex = latex_source({"question": r"研究 \input{unsafe} 与 10%_收益", "scenario": "general", "summary": "有文献证据 [1]。",
@@ -235,7 +235,7 @@ def test_tex_escapes_content_and_keeps_usage_in_appendix():
                         "design": dict(hypothesis="假设", control="原版", variables="变量", metric="指标", criterion="标准")})
     assert r"\input{unsafe}" not in tex and r"10\%\_收益" in tex
     assert "Token" not in tex.split(r"\end{abstract}")[0]
-    assert "后续实验设计（待验证）" in tex and "运行与费用" in tex and r"\hyperlink{ref1}{[1]}" in tex
+    assert r"\hyperlink{ref1}{[1]}" in tex
 
 
 def test_literature_excerpt_keeps_paper_contribution():

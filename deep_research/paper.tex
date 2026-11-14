@@ -1,26 +1,22 @@
-\documentclass[UTF8,a4paper,10pt,scheme=plain]{ctexart}
-\usepackage[margin=22mm]{geometry}
+\documentclass[UTF8,a4paper,11pt,scheme=plain]{ctexart}
+\usepackage[margin=25mm]{geometry}
 \usepackage{longtable,array,xcolor,xurl}
 \usepackage[unicode,colorlinks=true,linkcolor=teal,urlcolor=teal]{hyperref}
-\setlength{\parskip}{.28em}
-\setlength{\parindent}{2em}
+\setlength{\parskip}{.5em}
+\setlength{\parindent}{0pt}
 \setlength{\emergencystretch}{2em}
-\renewcommand{\abstractname}{摘要}
-\renewcommand{\arraystretch}{1.12}
+\renewcommand{\arraystretch}{1.15}
 \definecolor{researchteal}{HTML}{146B5B}
-\ctexset{section={format=\Large\bfseries\color{researchteal}},subsection={format=\large\bfseries}}
-\hypersetup{pdftitle={Research Agent},pdfauthor={Research Agent}}
+\ctexset{section={format=\Large\bfseries\color{researchteal}},subsection={format=\large\bfseries\color{researchteal}}}
+\hypersetup{pdftitle={研究报告}}
 \begin{document}
 \begin{center}
-{\small\color{researchteal} RESEARCH AGENT}\par
-\vspace{.7em}
 {\LARGE\bfseries @@TITLE@@\par}
-\vspace{.5em}
-{\small 研究报告 \quad @@ID@@}
 \end{center}
-\begin{abstract}
-@@ABSTRACT@@
-\end{abstract}
-\noindent\textbf{关键词}\quad @@KEYWORDS@@
+\vspace{.9em}
+\noindent{\bfseries 摘要：}@@ABSTRACT@@\par
+\vspace{.7em}
+\noindent{\bfseries 关键词：}@@KEYWORDS@@\par
+\vspace{.3em}
 @@BODY@@
 \end{document}
