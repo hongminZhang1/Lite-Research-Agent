@@ -1,0 +1,9 @@
+[project]
+name = "lite-research-agent"
+version = "1.0"
+description = "支持按需升级、强模型和对照运行的轻量研究 Agent"
+requires-python = ">=3.10"
+readme = "README.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

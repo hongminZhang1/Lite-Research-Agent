@@ -1,0 +1,26 @@
+\documentclass[UTF8,a4paper,10pt,scheme=plain]{ctexart}
+\usepackage[margin=22mm]{geometry}
+\usepackage{longtable,array,xcolor,xurl}
+\usepackage[unicode,colorlinks=true,linkcolor=teal,urlcolor=teal]{hyperref}
+\setlength{\parskip}{.28em}
+\setlength{\parindent}{2em}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\abstractname}{摘要}
+\renewcommand{\arraystretch}{1.12}
+\definecolor{researchteal}{HTML}{146B5B}
+\ctexset{section={format=\Large\bfseries\color{researchteal}},subsection={format=\large\bfseries}}
+\hypersetup{pdftitle={BoHack Research Agent},pdfauthor={BoHack Research Agent}}
+\begin{document}
+\begin{center}
+{\small\color{researchteal} BOHACK / 倍漾量化 / RESEARCH AGENT}\par
+\vspace{.7em}
+{\LARGE\bfseries @@TITLE@@\par}
+\vspace{.5em}
+{\small 研究报告 \quad @@ID@@}
+\end{center}
+\begin{abstract}
+@@ABSTRACT@@
+\end{abstract}
+\noindent\textbf{关键词}\quad @@KEYWORDS@@
+@@BODY@@
+\end{document}
