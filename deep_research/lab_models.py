@@ -141,10 +141,10 @@ class Settings(BaseModel):
 
 
 class Limits(BaseModel):
-    rounds: int = Field(default=3, strict=True, ge=1, le=8)
-    seconds: int = Field(default=180, strict=True, ge=5, le=900)
-    tokens: int = Field(default=12000, strict=True, ge=64, le=160000)
-    usd: float | None = Field(default=None, strict=True, ge=0, le=1000)
+    rounds: int = Field(default=3, strict=True, ge=1)
+    seconds: int | None = Field(default=None, strict=True, ge=5)
+    tokens: int | None = Field(default=None, strict=True, ge=64)
+    usd: float | None = Field(default=None, strict=True, ge=0)
 
 
 class BudgetStop(Exception):
@@ -196,6 +196,8 @@ class Budget:
     searches: list[dict] = field(default_factory=list)
 
     def remaining(self) -> float:
+        if self.limits.seconds is None:
+            return float("inf")
         return max(0, self.limits.seconds - (monotonic() - self.started))
 
     def check(self):
@@ -217,8 +219,10 @@ class Budget:
         return {"limits": self.limits.model_dump(), "seconds": round(monotonic()-self.started, 2),
                 "search_seconds": round(self.search_seconds, 2), "experiment_seconds": round(self.experiment_seconds, 2),
                 "input": prompt, "output": completion, "tokens": prompt + completion,
-                "remaining_tokens": max(0, self.limits.tokens - prompt - completion),
-                "remaining_seconds": round(self.remaining(), 1), "usd": round(cost, 8) if priced else None,
+                "remaining_tokens": (None if self.limits.tokens is None
+                                      else max(0, self.limits.tokens - prompt - completion)),
+                "remaining_seconds": (None if self.limits.seconds is None else round(self.remaining(), 1)),
+                "usd": round(cost, 8) if priced else None,
                 "known_usd": round(cost, 8), "unpriced_calls": missing, "stages": stages,
                 "search_calls": self.searches.copy(), "search_known_usd": sum(row["usd"] or 0 for row in self.searches),
                 "search_unpriced_calls": sum(row["usd"] is None for row in self.searches),
@@ -253,7 +257,8 @@ class Gateway:
         # Reserve a conservative byte-based allowance before a vendor returns exact usage.
         reserved_input = 32 + sum(len(msg["content"].encode("utf-8")) for msg in messages)
         snapshot = self.budget.snapshot()
-        remaining_output = snapshot["remaining_tokens"] - reserved_input
+        remaining_output = (snapshot["remaining_tokens"] - reserved_input
+                            if snapshot["remaining_tokens"] is not None else 2**31)
 
         def completion_limit(endpoint):
             # Sol counts reasoning and visible output toward the same limit.

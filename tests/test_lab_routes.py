@@ -189,7 +189,7 @@ def test_deepseek_default_uses_server_key_only_on_official_endpoint(client, monk
 
 @pytest.mark.parametrize(("settings", "limits", "expected"), [
     ({}, {"rounds": 0}, "轮数必须"),
-    ({}, {"seconds": None}, "时间预算必须"),
+    ({}, {"seconds": -1}, "时间预算必须"),
     ({}, {"tokens": True}, "Token 预算必须"),
     ({}, {"usd": -1}, "费用预算必须"),
     ({"strong": {"base": "https://api.deepseek.com/v1", "model": "deepseek-v4-pro"}}, {}, "云端强模型缺少"),

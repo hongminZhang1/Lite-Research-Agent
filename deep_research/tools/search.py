@@ -177,7 +177,7 @@ class SearchTool:
             response = requests.get(
                 f"{origin}/w/rest.php/v1/search/page",
                 params={"q": query, "limit": k},
-                headers={"User-Agent": "BoHackDeepResearch/1.0 (local research demo)"},
+                headers={"User-Agent": "Lite-Research-Agent/1.0 (local research demo)"},
                 timeout=timeout,
             )
             response.raise_for_status()

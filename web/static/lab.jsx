@@ -2,15 +2,13 @@ const {useState, useEffect, useRef} = React;
 const policyLabel = {adaptive:"按需升级", strong:"每步强模型", compare:"对照运行"};
 const statusLabel = {complete:"研究完成", budget:"预算已用尽", no_evidence:"证据不足", model_error:"模型请求失败", error:"执行失败"};
 const blankEndpoint = {base:"", model:"", key:"", input_price:"", output_price:"", cache_price:"", rate_source:"", billing:"auto"};
-const solPreset = {...blankEndpoint, base:"https://api.openai.com/v1", model:"gpt-6.1-sol",
-  input_price:"2", output_price:"10", cache_price:"0.10", rate_source:"OpenAI 官方标准费率"};
 const deepseekBase = "https://api.deepseek.com";
-const blankLimits = {rounds:3, seconds:180, tokens:12000, usd:""};
+const blankLimits = {rounds:3, seconds:"", tokens:"", usd:""};
 const budgetFields = [
-  ["rounds","轮数",1,8],
-  ["seconds","秒",5,900],
-  ["tokens","Token",64,160000],
-  ["usd","美元",0,1000],
+  ["rounds","轮数",1],
+  ["seconds","秒",5],
+  ["tokens","Token",64],
+  ["usd","美元",0],
 ];
 const fee = value => value == null ? "未知" : `US$ ${Number(value).toFixed(6)}`;
 const tokens = value => Number(value ?? 0).toLocaleString("zh-CN");
@@ -32,16 +30,16 @@ function payload(config) {
 
 function budgetError(limits) {
   const messages = {
-    rounds:"轮数必须是 1 到 8 之间的整数。",
-    seconds:"时间预算必须是 5 到 900 秒之间的整数。",
-    tokens:"Token 预算必须是 64 到 160000 之间的整数。",
-    usd:"费用预算必须在 0 到 1000 美元之间，也可以留空。",
+    rounds:"轮数必须是 1 或以上的整数。",
+    seconds:"时间预算必须是 5 或以上的整数秒，也可以留空表示不限制。",
+    tokens:"Token 预算必须是 64 或以上的整数，也可以留空表示不限制。",
+    usd:"费用预算必须是 0 或以上的数字，也可以留空。",
   };
-  for (const [field,,min,max] of budgetFields) {
+  for (const [field,,min] of budgetFields) {
     const empty = limits[field] === "";
-    if (field === "usd" && empty) continue;
+    if (field !== "rounds" && empty) continue;
     const value = Number(limits[field]);
-    if (empty || !Number.isFinite(value) || value < min || value > max || (field !== "usd" && !Number.isInteger(value))) {
+    if (empty || !Number.isFinite(value) || value < min || (field !== "usd" && !Number.isInteger(value))) {
       return messages[field];
     }
   }
@@ -64,12 +62,6 @@ function Settings({dialog,config,change}) {
   <small>手动输入的密钥仅保存在当前页面。模型连接测试会发出一次 API 调用。费率单位为美元 / 百万 Token。</small>
     {[["fast","普通模型"],["strong","强模型（可选）"]].map(([kind,title])=><section key={kind}>
       <div className="headrow"><h3>{title}</h3><div className="actions">
-        <button className="quiet" disabled={!!checking} onClick={()=>{
-          setMessage("");
-          const endpoint=config[kind];
-          const key=endpoint.base.trim().replace(/\/+$/, "")===solPreset.base ? endpoint.key : "";
-          change({...config,[kind]:{...solPreset,key}});
-        }}>使用 GPT-6.1 Sol</button>
         <button className="quiet" disabled={!!checking} onClick={()=>test(kind)}>{checking===kind?"正在测试…":"测试模型连接"}</button>
       </div></div>
       <div className="fields">{[["base","API Base URL","https://服务商地址/v1"],["model","模型名","服务商提供的模型 ID"],["key","API Key","输入服务商密钥"],["input_price","输入费率","可选"],["output_price","输出费率","可选"],["cache_price","缓存输入费率","可选"],["rate_source","费率来源","供应商价格页或协议名称"]].map(([field,label,placeholder])=><label className={`field ${field==="base"?"full":""}`} key={field}>{label}
@@ -90,7 +82,7 @@ function Metrics({usage, live}) {
   if(!usage) return null;
   return <div className="metrics"><span>总耗时 {usage.seconds} 秒</span><span>输入 / 输出 {tokens(usage.input)} / {tokens(usage.output)} Token</span><span>{usage.unpriced_calls?`模型已知小计 ${fee(usage.known_usd)} · ${usage.unpriced_calls} 次无法估算`:`模型费用 ${fee(usage.usd)}`}</span>
     {usage.search_calls?.length>0&&<span>搜索费用 {fee(usage.search_known_usd)}{usage.search_unpriced_calls>0?` · ${usage.search_unpriced_calls} 次无法估算`:""}</span>}
-    {live?<><span>剩余 {usage.remaining_seconds} 秒</span><span>剩余 {tokens(usage.remaining_tokens)} Token</span>{usage.remaining_usd!=null&&<span>剩余 {fee(usage.remaining_usd)}</span>}</>:<><span>检索 {usage.search_seconds} 秒</span><span>实验 {usage.experiment_seconds} 秒</span></>}
+    {live?<><span>{usage.remaining_seconds!=null?`剩余 ${usage.remaining_seconds} 秒`:"时间不限"}</span><span>{usage.remaining_tokens!=null?`剩余 ${tokens(usage.remaining_tokens)} Token`:"Token 不限"}</span>{usage.remaining_usd!=null&&<span>剩余 {fee(usage.remaining_usd)}</span>}</>:<><span>检索 {usage.search_seconds} 秒</span><span>实验 {usage.experiment_seconds} 秒</span></>}
   </div>;
 }
 
@@ -258,7 +250,7 @@ function App() {
     socket.current=ws;
     let terminal=false;
     ws.onopen=()=>ws.send(JSON.stringify({question,scenario,policy,session_id:selected,settings:payload(config),
-      limits:{rounds:Number(limits.rounds),seconds:Number(limits.seconds),tokens:Number(limits.tokens),usd:limits.usd===""?null:Number(limits.usd)}}));
+      limits:{rounds:Number(limits.rounds),seconds:limits.seconds===""?null:Number(limits.seconds),tokens:limits.tokens===""?null:Number(limits.tokens),usd:limits.usd===""?null:Number(limits.usd)}}));
     ws.onmessage=e=>{
       const {type,data,policy:which,message,session_id,code}=JSON.parse(e.data);
       if(type==="complete"||type==="error"){
@@ -291,7 +283,7 @@ function App() {
     ws.onclose=()=>{socket.current=null; if(!terminal){setError("连接已关闭。可从左侧重新打开会话查看已保存的结果。");setPending(null);refresh();}};
   }
   const groupRuns=runs.reduce((groups,run)=>{const key=run.group||run.id;const last=groups.at(-1);if(last?.key===key)last.items.push(run);else groups.push({key,items:[run]});return groups;},[]);
-  return <div className="layout"><aside className={sidebar?"open":""}><div className="logo"><span className="logo-mark" aria-hidden="true">◆</span><div>Research Agent<small>BoHack · 倍漾量化</small></div></div>
+  return <div className="layout"><aside className={sidebar?"open":""}><div className="logo"><span className="logo-mark" aria-hidden="true">◆</span><div>Research Agent</div></div>
     <button className="primary" disabled={busy} onClick={()=>load(null)}>＋ 新研究</button><small>研究会话</small>
     <nav className="history" aria-label="研究会话">{sessions.map(item=>{
       const running=busy&&selected===item.id;
@@ -303,7 +295,7 @@ function App() {
     })}</nav>
     <button className="quiet mobile" onClick={()=>setSidebar(false)}>关闭会话列表</button>
     <button className="quiet" onClick={()=>{setSidebar(false);dialog.current.showModal();}}>模型与搜索设置</button>
-  </aside><main><header><button className="quiet mobile" aria-label="打开会话列表" onClick={()=>setSidebar(!sidebar)}>☰</button><div><strong>深度研究助手</strong><small>{selected?"在当前会话继续研究":"从研究问题到可复现报告"}</small></div><button className="quiet" onClick={()=>dialog.current.showModal()}>设置</button></header>
+  </aside><main><header><button className="quiet mobile" aria-label="打开会话列表" onClick={()=>setSidebar(!sidebar)}>☰</button><div><strong>深度研究助手</strong><small>{selected?"在当前会话继续研究":"从研究问题到可复现报告"}</small></div></header>
     <div className="scroll"><div className="column">
       {!runs.length&&!legacy.length&&!pending&&<div className="welcome"><h1>你想研究什么？</h1><p>提交一个课题，查看证据、验证过程和最终报告。</p><div className="examples"><button className="quiet" onClick={()=>{setScenario("market");setInput("如何加速行情事件分组聚合，同时保证成交量和事件数一致？");}}>试跑行情聚合实验</button><button className="quiet" onClick={()=>{setScenario("general");setInput("VGGT4D 如何分离动态物体与静态背景？请给出原论文来源。");}}>研究 VGGT4D</button></div></div>}
       {legacy.map((t,i)=><div key={i} className={t.role==="user"?"question":"card copy"}>{t.content}</div>)}
@@ -313,7 +305,7 @@ function App() {
     </div></div>
     <form className="composer" onSubmit={send} noValidate><div className="column composer-card"><div className="compose-main"><textarea aria-label="研究问题" placeholder={selected?"针对已有报告追问或补充角度…":"输入一个研究问题…"} required maxLength="2500" value={input} disabled={busy} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();e.currentTarget.form.requestSubmit();}}}/><button className="primary" disabled={loadingConfig||busy||!input.trim()}>{busy?"研究中…":"开始研究"}</button></div>
       <div className="options"><label>场景<select disabled={busy} value={scenario} onChange={e=>setScenario(e.target.value)}><option value="general">开放调研</option><option value="market">行情聚合实验</option></select></label><label>策略<select disabled={busy} value={policy} onChange={e=>setPolicy(e.target.value)}><option value="adaptive">按需升级</option><option value="strong">每步强模型</option><option value="compare">对照运行</option></select></label>
-        {budgetFields.map(([field,label,min,max])=><label key={field}>{label}<input type="number" min={min} max={max} step={field==="usd"?"any":1} required={field!=="usd"} placeholder={field==="usd"?"可选":undefined} disabled={busy} value={limits[field]} onChange={e=>setLimits({...limits,[field]:e.target.value})}/></label>)}</div>
+        {budgetFields.map(([field,label,min])=><label key={field}>{label}<input type="number" min={min} step={field==="usd"?"any":1} required={field==="rounds"} placeholder={field==="rounds"?undefined:"可选，留空不限制"} disabled={busy} value={limits[field]} onChange={e=>setLimits({...limits,[field]:e.target.value})}/></label>)}</div>
       {policy==="compare"&&<small>两个策略依次运行，各自使用同一套预算和验收标准。</small>}
     </div></form>
   </main><Settings dialog={dialog} config={config} change={value=>{configChanged.current=true;setConfig(value);}}/>

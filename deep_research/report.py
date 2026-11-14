@@ -222,7 +222,7 @@ def pdf_bytes(run: dict) -> bytes:
         raise PdfError("找不到 XeLaTeX。请安装支持中文的 TeX 发行版，或设置 RESEARCH_XELATEX。")
     miktex = "miktex" in executable.lower()
     flags = ["-disable-write18", "-disable-installer"] if miktex else ["-no-shell-escape"]
-    with TemporaryDirectory(prefix="bohack-tex-") as temporary:
+    with TemporaryDirectory(prefix="research-tex-") as temporary:
         folder = Path(temporary)
         (folder / "paper.tex").write_text(latex_source(run), encoding="utf-8")
         try:

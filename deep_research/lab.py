@@ -72,7 +72,7 @@ def fetch_text(url: str, budget: Budget) -> tuple[str, str]:
             if not addresses or any(not ipaddress.ip_address(addr[4][0]).is_global for addr in addresses):
                 return "", "blocked_url"
             with requests.get(url, timeout=max(0.1, min(5, budget.remaining())), allow_redirects=False,
-                              stream=True, headers={"User-Agent": "BoHack Research Agent/1.0"}) as response:
+                              stream=True, headers={"User-Agent": "Lite-Research-Agent/1.0"}) as response:
                 if response.is_redirect:
                     location = response.headers.get("Location")
                     if not location:
@@ -503,7 +503,7 @@ def research_rounds(question, plan, sources, seen, budget, gateway, rounds, emit
     for number in range(1, budget.limits.rounds + 1):
         budget.check()
         available = budget.snapshot()
-        if not available["remaining_tokens"]:
+        if available["remaining_tokens"] is not None and available["remaining_tokens"] <= 0:
             raise BudgetStop("已达到 Token 上限。")
         if budget.limits.usd is not None and available["known_usd"] > budget.limits.usd:
             raise BudgetStop("已达到费用上限。")
