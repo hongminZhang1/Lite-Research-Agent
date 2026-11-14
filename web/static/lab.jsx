@@ -284,7 +284,7 @@ function App() {
     ws.onclose=()=>{socket.current=null; if(!terminal){setError("连接已关闭。可从左侧重新打开会话查看已保存的结果。");setPending(null);refresh();}};
   }
   const groupRuns=runs.reduce((groups,run)=>{const key=run.group||run.id;const last=groups.at(-1);if(last?.key===key)last.items.push(run);else groups.push({key,items:[run]});return groups;},[]);
-  return <div className="layout"><aside className={sidebar?"open":""}><div className="logo"><span className="logo-mark" aria-hidden="true">◆</span><div>Research Agent</div></div>
+  return <div className="layout"><aside className={sidebar?"open":""}><div className="logo"><span className="logo-mark" aria-hidden="true"><svg viewBox="0 0 64 64" width="23" height="23" focusable="false"><circle cx="28" cy="28" r="15.5" fill="none" stroke="currentColor" strokeWidth="7"/><path d="M38.8 38.8 51.5 51.5" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round"/><path d="M28 19.8c1.4 5.4 2.8 6.8 8.2 8.2-5.4 1.4-6.8 2.8-8.2 8.2-1.4-5.4-2.8-6.8-8.2-8.2 5.4-1.4 6.8-2.8 8.2-8.2Z" fill="currentColor"/></svg></span><div>Research Agent</div></div>
     <button className="primary" disabled={busy} onClick={()=>load(null)}>＋ 新研究</button><small>研究会话</small>
     <nav className="history" aria-label="研究会话">{sessions.map(item=>{
       const running=busy&&selected===item.id;

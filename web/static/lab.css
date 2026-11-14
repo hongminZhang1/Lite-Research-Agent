@@ -98,8 +98,9 @@ aside {
   height: 36px;
   flex: none;
   box-shadow: 0 3px 10px rgba(12, 93, 75, .28);
-  font-size: 17px;
+  line-height: 0;
 }
+.logo-mark svg { display: block; }
 .history {
   display: grid;
   gap: 3px;
@@ -191,21 +192,65 @@ header small { display: block; margin-top: 3px; }
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
 }
-.composer-card { padding: 12px; display: grid; gap: 10px; transition: box-shadow .18s ease, border-color .18s ease; }
-.composer-card:focus-within { border-color: #b9d3c8; box-shadow: var(--shadow-md); }
-.compose-main { display: flex; align-items: end; gap: 10px; }
+.composer-card { padding: 12px; display: grid; gap: 10px; }
+
+/* 输入行：把输入框压到单行高度，和「开始研究」按钮同一个高度（40px），
+   两者上下边缘严格对齐；按钮不再被拉伸变高，也不再带向下投影和悬停上浮。 */
+.compose-main {
+  --field-h: 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .compose-main textarea {
   resize: vertical;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  padding: 10px 12px;
+  height: var(--field-h);
+  padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel-2);
-  min-height: 46px;
-  line-height: 1.5;
+  color: var(--ink);
+  line-height: 22px;
+  transition: border-color .15s ease, background .15s ease;
 }
-.compose-main textarea:focus { border-color: var(--accent); }
+.compose-main textarea::placeholder { color: #9bb1a8; }
+.compose-main textarea:not(:disabled):hover { border-color: #c9dcd2; }
+.compose-main textarea:disabled {
+  background: var(--bg-soft);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/* 聚焦只高亮一层：就换这一条边框的颜色（同时底色提亮到纯白），
+   不再叠加 outline、外发光或卡片描边，因此不会出现两圈套着的“双层高亮”。 */
+.compose-main textarea:focus,
+.compose-main textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--panel);
+  box-shadow: none;
+}
+
+.compose-main .primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  height: var(--field-h);
+  padding: 0 20px;
+  border-radius: 10px;
+  box-shadow: none;
+  white-space: nowrap;
+  transition: background .15s ease;
+}
+.compose-main .primary:hover {
+  transform: none;
+  box-shadow: none;
+  background: linear-gradient(135deg, #0e6a56, var(--brand-strong));
+}
+.compose-main .primary:active { transform: none; }
 .options { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .options label { font-size: 12px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; font-weight: 500; }
 .options input { width: 92px; }
@@ -217,7 +262,11 @@ header small { display: block; margin-top: 3px; }
   border-radius: 7px;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
-.options input:focus, .options select:focus, .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 138, 106, .12); }
+.options input:focus, .options select:focus, .field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: none;
+}
 
 /* ---------- Conversation / run cards ---------- */
 .run { margin: 0 0 28px; }
